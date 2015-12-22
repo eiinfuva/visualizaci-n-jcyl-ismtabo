@@ -1,0 +1,6 @@
+Energia;Fecha validez;Valor;Unidad;Frecuencia;Escala
+eolica;2014;363.933;Toneladas equivalentes de petr�leo;12;meses
+hidraulica;2014;7.768;Toneladas equivalentes de petr�leo;12;meses
+nuclear;2014;0;Toneladas equivalentes de petr�leo;12;meses
+primaria;2014;380.728;Toneladas equivalentes de petr�leo;12;meses
+energia_solar;2014;3.917;Toneladas equivalentes de petr�leo;12;meses

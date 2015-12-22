@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <link rel="icon" type="image/ico" href="favicon.ico">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
+    <link rel="stylesheet" href="./nvd3/build/nv.d3.css" >
+    <style>
+      .arc text {
+        font: 10px sans-serif;
+        text-anchor: middle;
+      }
+
+      .arc path {
+        stroke: #fff;
+      }
+      body{
+        margin-left: 50px;
+      }
+      footer{
+        display:block;
+      }
+    </style>
+  </head>
+  <body>
+    <h1 id="title"></h1>
+    <h3>Toneladas equivalentes de petróleo</h3>
+    <script src="http://d3js.org/d3.v3.min.js"></script>
+    <script src="./nvd3/build/nv.d3.js"></script>
+    <script>
+      //Dimensiones del diagrama
+      var width = 900,
+          height = 500;
+
+      //Generación del espacio para el diagrama
+      d3.select("body")
+              .append("div")
+                .attr("id","chart")
+              .append("svg")
+                .attr("height", height)
+                .attr("width", width)
+      
+      //Funciones para tomar los datos de la petición GET el navegador
+      function getSearchParameters() {
+            var prmstr = window.location.search.substr(1);
+            return prmstr != null && prmstr != "" ? transformToAssocArray(prmstr) : {};
+      }
+
+      function transformToAssocArray( prmstr ) {
+          var params = {};
+          var prmarr = prmstr.split("&");
+          for ( var i = 0; i < prmarr.length; i++) {
+              var tmparr = prmarr[i].split("=");
+              params[tmparr[0]] = tmparr[1];
+          }
+          return params;
+      }
+      var params = getSearchParameters();
+      
+      //Ruta del fichero de datos correspondiente
+      var path = "./data/energia/historicos/"+params.energia+".json";
+
+      d3.select("#title").text(decodeURI(params.title));
+
+      //Creación del diagrama de areas apiladas(fuente: http://nvd3.org/examples/stackedArea.html)
+      d3.json(path,function(data){
+        console.log(data);
+        nv.addGraph(function() {
+          var chart = nv.models.stackedAreaChart()
+                        .margin({left:100, right: 200})
+                        .x(function(d) { return d[0] })   //Acceso a los valores del diagrama
+                        .y(function(d) { return d[1] })   
+                        .useInteractiveGuideline(true)    //Interacción para ver el valor de cada punto
+                        .rightAlignYAxis(false)           //Atributo para mover el eje Y a la derecha
+                        .showControls(true)       //Muestra los controles de elección de modo 'Stacked', 'Stream', 'Expanded'.
+                        .clipEdge(true);
+
+          d3.select('#chart svg')
+            .datum(data)
+            .call(chart);
+
+          nv.utils.windowResize(chart.update);
+
+          return chart;
+        });
+      });
+
+    </script>
+    <footer>
+      <p>Autor: Ismael Taboada Rodero</p>
+      <p>Información de contacto: <a href="mailto:ismaeljose.taboada@alumnos.uva.es">ismaeljose.taboada@alumnos.uva.es</a>.</p>
+    </footer>
+  </body>
+</html>

@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Distribución por energías</title>  
+  <link rel="icon" type="image/ico" href="favicon.ico">
+  <meta charset="utf-8">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
+  <style>
+    body{
+      margin-top: 10px;
+    }
+      .arc text {
+          font: 10px sans-serif;
+          text-anchor: middle;
+      }
+
+      .arc path {
+          stroke: #fff;
+      }
+    h1, #legend{
+      margin-left: 50px;
+    }
+    .legend {
+      padding: 5px;
+      font: 10px sans-serif;
+      background: yellow;
+      box-shadow: 2px 2px 1px #888;
+    }
+    footer{
+      display:block;
+      margin-left: 50px;
+    }
+
+  </style>
+</head>
+  <body>
+    <h1>Distribución de producción por tipo de energía</h1>
+    <div class="row" id="row1"></div>
+    <div class="row" id="row2"></div>
+    <script src="http://d3js.org/d3.v3.min.js"></script>
+    <script>
+      //Variables de dimensiones del diagrama
+      var width = 500,
+            height = 250,
+            radius = Math.min(width, height) / 3;
+
+      //Distribución de energías por columnas
+      var row1 = [{"id":"energia_con_carbon", "name":"Energía extraída del carbon"},
+                  {"id":"energia_eolica", "name": "Energía eólica"},
+                  {"id":"energia_hidraulica", "name": "Energía hidráulica"}];
+      var row2 = [{"id":"energia_primaria", "name": "Energía primaria"}, 
+                  {"id":"energia_solar", "name":"Energía solar"}]
+
+      //Conjunto de filas en la matriz de diagramas
+      var energy_pie_table = [row1,row2];
+
+      //Conjunto de provincias
+      var dataset = ["Ávila","Burgos","León","Palencia","Salamanca","Segovia","Soria","Valladolid","Zamora"];
+
+      //Función de color
+      var color = d3.scale.ordinal()
+        .range(["#98abc5", "#8a89a6", "#7b6888", "#6b486b", "#a05d56", "#d0743c", "#ff8c00"]);
+
+      //Componenetes del diagrama circular
+      var arc = d3.svg.arc()
+          .outerRadius(radius - 10)
+          .innerRadius(0);
+
+      var labelArc = d3.svg.arc()
+          .outerRadius(radius + 10)
+          .innerRadius(radius + 10);
+
+      var pie = d3.layout.pie()
+          .sort(null)
+          .value(function(d) { return d.Valor; });
+
+      //Selector de delimitador en el csv
+      var dsv = d3.dsv(";","text/csv");
+      
+      //Generación de los svg para cada diagrama
+      for (var i = 0; i < energy_pie_table.length; i++) {
+        //Por cada fila
+        energy_pie_table[i].forEach(function(energy){
+          //Estructura y dimensiones del espacio reservado para el diagrama
+          d3.select("#row"+(i+1))
+            .append("div")
+              .attr("class","col-md-4")
+            .append("a")
+              //Cada diagrama enlaza con la vista por tipo de energía
+              .attr("href","energia.html?energia="+energy.id+"&title="+energy.name)
+            .append("svg")
+              .attr("height", height)
+              .attr("width", width)
+            .append("g")
+              .attr("id",energy.id)
+              .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")");
+          
+          //Lectura de datos del csv
+          dsv("data/energia/"+energy.id+".csv", type,function(error, data) {
+            if (error) throw error;
+            var svg = d3.select("#"+energy.id);
+            svg.append("text")
+            .attr("x","-125")
+            .attr("y","-100")
+            .text(energy.name);
+
+            var g = svg.selectAll(".arc")
+            .data(pie(data))
+            .enter().append("g")
+            .attr("class", "arc")
+            .attr("data-legend",function(d) { return d.Provincia});
+
+            g.append("path")
+            .attr("d", arc)
+            .style("fill", function(d) { return color(d.data.Provincia); });
+
+          });
+        });
+      }
+
+      //Dimensiones de la leyenda
+      var legend_width = 250, legend_height = 250;
+
+      //Generación de la leyenda
+      var legend = d3.select("#row2")
+        .append("div")
+          .attr("class","col-md-4")
+        .append("svg")
+          .attr("height", legend_height)
+          .attr("width", legend_width)
+        .append("g")
+          .attr("class", "legend")
+          .attr("x", legend_width - 65)
+          .attr("y", 25)
+          .attr("height", 100)
+          .attr("width", 100);
+
+      legend.selectAll('g').data(dataset)
+        .enter()
+        .append('g')
+        .each(function(d, i) {
+          var g = d3.select(this);
+          g.append("rect")
+            .attr("x", legend_width - 75)
+            .attr("y", i*25)
+            .attr("width", 10)
+            .attr("height", 10)
+            .style("fill", function(d) { return color(String(d[i])); });
+
+          g.append("text")
+            .attr("x", legend_width - 60)
+            .attr("y", i * 25 + 8)
+            .attr("height",30)
+            .attr("width",100)
+            .style("fill", function(d) { return color(String(d[i])); })
+            .text(function(d){ return d;});
+
+        });
+
+      function type(d) {
+        d.Valor = +d.Valor;
+        return d;
+      };
+
+
+    </script>
+    <footer>
+      <p>Autor: Ismael Taboada Rodero</p>
+      <p>Información de contacto: <a href="mailto:ismaeljose.taboada@alumnos.uva.es">ismaeljose.taboada@alumnos.uva.es</a>.</p>
+    </footer>
+  </body>
+</html>
